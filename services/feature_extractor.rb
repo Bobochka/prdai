@@ -44,10 +44,6 @@ class Services::FeatureExtractor
       body: { image: file }
     )
 
-    p '============='
-    p response.body
-    p '============='
-
     JSON(response.body).map do |elem|
       {
         box: elem['bbox'],

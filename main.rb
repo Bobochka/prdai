@@ -1,5 +1,4 @@
 require "sinatra/base"
-require "sinatra/reloader"
 require "singleton"
 require "sinatra"
 require "sinatra/reloader" if development?
@@ -10,8 +9,9 @@ require_relative "tag_repository"
 require_relative "services/feature_extractor"
 require_relative "services/feature_indexer"
 
-# set :public_folder, Proc.new { File.join(root, "public") }
-
+before do
+  response.headers['Access-Control-Allow-Origin'] = '*'
+end
 
 get '/' do
   erb :index, layout: :layout
@@ -41,7 +41,9 @@ post '/upload_tag' do
 
   features = Services::FeatureExtractor.instance.from_training_set(files)
 
-  Services::FeatureIndexer.instance.index(features)
+  p features
+
+  Services::FeatureIndexer.instance.index(id, features)
 
   erb "uploaded with #{id}<br><br>#{features}"
 end
@@ -60,7 +62,27 @@ post '/search' do
 
   boxes_with_feature = Services::FeatureExtractor.instance.from_uploadable(file)
 
+  # boxes_with_feature.each do |elem|
+  #   p elem[:feature]
+  # end
 
+  boxes_with_feature_scores = Services::FeatureIndexer.instance.search(boxes_with_feature)
 
-  erb :search_result
+  p("res: #{boxes_with_feature_scores}")
+
+  res = boxes_with_feature_scores.map do |elem|
+    score = elem[:tag][:score]
+    next nil if score > 0.8 
+    tag_name = TagRepository.instance.find_by_id(elem[:tag][:tag_id])
+
+    { boundingBox: elem[:box], tag: tag_name,  }
+  end.compact
+
+  # { boundingBox: [50, 50, 100, 100], tag: "hello" }
+
+    # elem[:feature]
+
+  # p boxes_with_feature
+
+  erb JSON(res)
 end
