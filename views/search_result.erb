@@ -1,2 +1,46 @@
 <h2>File Uploaded</h2>
-<img src="<%= @file_name %>" />
+<style type="text/css">
+  .search-image-wrapper {
+    position: relative;
+  }
+
+  .bounding-box {
+    position: absolute;
+    background-color: rgba(255, 0, 0, 0.5);
+    border: 1px dashed black;
+    margin: 0px auto;
+    text-align: center;
+  }
+</style>
+
+<script type="text/javascript">
+  $(document).ready(() => {
+    const $searchImgWrapper = $(".search-image-wrapper")
+
+    function drawBoundingBoxes(boxesWithFeature) {
+      boundingBoxes.forEach((box, index) => {
+        addBoundingBox(box, index);
+      })
+    }
+
+    function addBoundingBox(boxWithFeature, index) {
+      let [x1, y1, x2, y2] = boxWithFeature.boundingBox;
+      const width = x2 - x1
+      const height = y2 - y1
+
+      let $boundingBox = jQuery(`<div />`, {
+        id: index,
+        class: 'bounding-box',
+        text: boxWithFeature.tag,
+        style: `left: ${x1}px; top: ${y1}; width: ${width}px; height: ${height}px`
+      })
+
+      $boundingBox.appendTo($searchImgWrapper);
+    }
+  })
+
+</script>
+
+<div class="search-image-wrapper">
+  <img id="search-image" src="<%= @file_name %>" />
+</div>
